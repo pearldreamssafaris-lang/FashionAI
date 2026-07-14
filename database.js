@@ -684,3 +684,135 @@ reject(false);
 
 
 }
+// ================================
+// Save Chat History
+// ================================
+
+export function saveChat(question, answer){
+
+
+return openDatabase()
+
+.then(()=>{
+
+
+return new Promise(
+(resolve,reject)=>{
+
+
+const transaction =
+db.transaction(
+"history",
+"readwrite"
+);
+
+
+
+const store =
+transaction.objectStore(
+"history"
+);
+
+
+
+store.add({
+
+question,
+
+answer,
+
+createdAt:
+new Date().toISOString()
+
+});
+
+
+
+transaction.oncomplete=()=>{
+
+resolve(true);
+
+};
+
+
+
+transaction.onerror=()=>{
+
+reject(false);
+
+};
+
+
+
+});
+
+
+});
+
+
+}
+
+
+
+
+// ================================
+// Get Chat History
+// ================================
+
+export function getChatHistory(){
+
+
+return openDatabase()
+
+.then(()=>{
+
+
+return new Promise(
+(resolve,reject)=>{
+
+
+const transaction =
+db.transaction(
+"history",
+"readonly"
+);
+
+
+
+const store =
+transaction.objectStore(
+"history"
+);
+
+
+
+const request =
+store.getAll();
+
+
+
+request.onsuccess=()=>{
+
+resolve(
+request.result
+);
+
+};
+
+
+
+request.onerror=()=>{
+
+reject(false);
+
+};
+
+
+
+});
+
+
+});
+
+
+}
