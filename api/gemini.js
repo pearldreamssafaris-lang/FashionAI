@@ -13,11 +13,13 @@ export default async function handler(req, res) {
 
     if (req.method !== "POST") {
 
+
         return res.status(405).json({
 
             error: "Only POST requests allowed"
 
         });
+
 
     }
 
@@ -38,7 +40,7 @@ export default async function handler(req, res) {
 
         console.log(
             "IMAGE RECEIVED:",
-            Boolean(image)
+            !!image
         );
 
 
@@ -57,6 +59,21 @@ export default async function handler(req, res) {
 
 
 
+        if (!prompt) {
+
+
+            return res.status(400).json({
+
+                error: "Missing prompt"
+
+            });
+
+
+        }
+
+
+
+
 
         const parts = [
 
@@ -72,7 +89,7 @@ export default async function handler(req, res) {
 
 
 
-        // Add image if available
+        // Add image if user uploads one
 
         if (image) {
 
@@ -100,21 +117,26 @@ export default async function handler(req, res) {
 
 
 
+
             parts.push({
 
-                inline_data: {
+                inlineData: {
 
-                    mime_type: mimeType,
+
+                    mimeType: mimeType,
+
 
                     data: base64Image
 
+
                 }
+
 
             });
 
 
-        }
 
+        }
 
 
 
@@ -128,10 +150,11 @@ export default async function handler(req, res) {
 
 
 
+
         const geminiResponse = await fetch(
 
 
-            "https://generativelanguages.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key="
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key="
 
             + process.env.GEMINI_API_KEY,
 
@@ -142,11 +165,14 @@ export default async function handler(req, res) {
                 method: "POST",
 
 
+
                 headers: {
+
 
                     "Content-Type":
 
                     "application/json"
+
 
                 },
 
@@ -160,12 +186,15 @@ export default async function handler(req, res) {
 
                         {
 
+
                             parts: parts
+
 
                         }
 
 
                     ]
+
 
 
                 })
@@ -174,13 +203,16 @@ export default async function handler(req, res) {
             }
 
 
+
         );
 
 
 
 
 
+
         const data =
+
         await geminiResponse.json();
 
 
@@ -189,7 +221,7 @@ export default async function handler(req, res) {
 
         console.log(
 
-            "GEMINI RESPONSE:",
+            "GEMINI RESPONSE FULL:",
 
             JSON.stringify(
                 data,
@@ -203,12 +235,16 @@ export default async function handler(req, res) {
 
 
 
+
         if (!geminiResponse.ok) {
 
 
             return res.status(
+
                 geminiResponse.status
+
             ).json({
+
 
                 error:
 
@@ -216,11 +252,12 @@ export default async function handler(req, res) {
 
                 "Gemini request failed"
 
+
             });
 
 
-        }
 
+        }
 
 
 
@@ -237,8 +274,8 @@ export default async function handler(req, res) {
 
 
 
-
         return res.status(200).json({
+
 
             result:
 
@@ -246,51 +283,9 @@ export default async function handler(req, res) {
 
             "No AI response"
 
-        });
-
-
-
-
-
-
-    } catch(error) {
-
-
-
-        console.error(
-            "SERVER ERROR:",
-            error
-        );
-
-
-
-        return res.status(500).json({
-
-            error:
-            error.message
-
-        });
-
-
-    }
-
-
-}
-
-
-
-        return res.status(200).json({
-
-
-            result:
-
-            result || "No AI response"
 
 
         });
-
-
-
 
 
 
@@ -312,7 +307,6 @@ export default async function handler(req, res) {
 
 
         return res.status(500).json({
-
 
             error:
 
