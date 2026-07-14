@@ -1,7 +1,21 @@
+// =================================
+// FashionAI Wardrobe Display
+// Wardrobe.js
+// =================================
+
+
 import {
 getWardrobe
 }
 from "./database.js";
+
+
+
+import {
+organizeClothing
+}
+from "./wardrobe-engine.js";
+
 
 
 
@@ -24,13 +38,21 @@ let clothes=[];
 
 
 
+
+// ================================
 // Load wardrobe
+// ================================
+
 
 async function loadWardrobe(){
 
 
+try{
+
+
 clothes =
 await getWardrobe();
+
 
 
 displayClothes(
@@ -38,10 +60,35 @@ clothes
 );
 
 
+
+}
+
+catch(error){
+
+
+console.error(
+"Cannot load wardrobe:",
+error
+);
+
+
+
+}
+
+
 }
 
 
 
+
+
+
+
+
+
+// ================================
+// Display clothes
+// ================================
 
 
 function displayClothes(items){
@@ -64,7 +111,10 @@ Your wardrobe is empty 👗
 
 return;
 
+
 }
+
+
 
 
 
@@ -72,7 +122,17 @@ return;
 items.forEach(item=>{
 
 
+
+const category =
+
+organizeClothing(item);
+
+
+
+
+
 const card =
+
 document.createElement(
 "div"
 );
@@ -84,7 +144,10 @@ card.className =
 
 
 
-card.innerHTML=`
+
+
+card.innerHTML = `
+
 
 <div class="clothing-icon">
 
@@ -92,18 +155,49 @@ card.innerHTML=`
 </div>
 
 
+
 <h3>
+
 ${item.type || "Clothing"}
+
 </h3>
 
 
+
 <p>
-${item.primaryColor || ""}
+
+🎨 Color:
+
+${item.primaryColor || "Unknown"}
+
 </p>
 
 
+
+<p>
+
+✨ Style:
+
+${item.style || "Unknown"}
+
+</p>
+
+
+
+<p>
+
+📂 Category:
+
+${category.category}
+
+</p>
+
+
+
 <span>
-${item.style || "Style"}
+
+🎯 ${category.occasion}
+
 </span>
 
 
@@ -111,10 +205,14 @@ ${item.style || "Style"}
 
 
 
+
+
 grid.appendChild(card);
 
 
+
 });
+
 
 
 }
@@ -124,25 +222,38 @@ grid.appendChild(card);
 
 
 
-// Search
+
+
+// ================================
+// Search wardrobe
+// ================================
 
 
 search.addEventListener(
+
 "input",
+
 ()=>{
 
 
 const value =
+
 search.value.toLowerCase();
 
 
 
+
 const filtered =
-clothes.filter(item=>
+
+clothes.filter(item =>
+
 
 JSON.stringify(item)
+
 .toLowerCase()
+
 .includes(value)
+
 
 );
 
@@ -153,24 +264,35 @@ filtered
 );
 
 
+
 });
 
 
 
 
 
-// Outfit Generator button
+
+
+// ================================
+// Generate Outfit
+// ================================
+
 
 document
-.getElementById("generateBtn")
+.getElementById(
+"generateBtn"
+)
 .onclick=()=>{
 
 
-window.location.href=
+window.location.href =
 "outfits.html";
 
 
 };
+
+
+
 
 
 
