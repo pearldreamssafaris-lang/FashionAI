@@ -1,84 +1,64 @@
-// =================================
-// FashionAI Gemini Connection
-// =================================
+// api/gemini.js
 
-const WORKER_URL =
-"https://fashion-ai-silk.vercel.app/api/gemini";
+export default async function handler(req, res) {
 
+  if (req.method !== "POST") {
+    return res.status(405).json({
+      error: "Only POST requests allowed"
+    });
+  }
 
-export async function askGemini(prompt, image=null){
+  try {
 
+    const { prompt } = req.body;
 
-try{
+    if (!process.env.GEMINI_API_KEY) {
+      return res.status(500).json({
+        error: "Missing GEMINI_API_KEY"
+      });
+    }
 
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [
+                {
+                  text: prompt
+                }
+              ]
+            }
+          ]
+        })
+      }
+    );
 
-const body = {
+    const data = await response.json();
 
-prompt: prompt
+    if (data.error) {
+      return res.status(500).json({
+        error: data.error.message
+      });
+    }
 
-};
+    return res.status(200).json({
+      result: data.candidates?.[0]?.content?.parts?.[0]?.text || "No response from Gemini."
+    });
 
+  } catch (error) {
 
+    console.error(error);
 
-if(image){
+    return res.status(500).json({
+      error: error.message
+    });
 
-body.image = image;
-
-}
-
-
-
-const response = await fetch(
-
-WORKER_URL,
-
-{
-
-method:"POST",
-
-headers:{
-
-"Content-Type":"application/json"
-
-},
-
-body:JSON.stringify(body)
-
-}
-
-);
-
-
-
-const data = await response.json();
-
-
-
-if(data.error){
-
-throw new Error(data.error);
-
-}
-
-
-
-return data.result;
-
-
-
-}
-
-catch(error){
-
-console.log(
-"FashionAI Error:",
-error
-);
-
-
-throw error;
-
-}
-
+  }
 
 }
