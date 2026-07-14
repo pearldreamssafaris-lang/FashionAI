@@ -1,13 +1,17 @@
 // =================================
-// FashionAI Upload System
+// FashionAI Hybrid Upload System
 // upload.js
 // =================================
+
 console.log("✅ Upload JS loaded");
+
+
 
 import {
 saveClothing
 }
 from "./database.js";
+
 
 
 import {
@@ -18,12 +22,17 @@ from "./clothing-ai.js";
 
 
 
+
+// ================================
 // Elements
+// ================================
+
 
 const imageInput =
 document.getElementById(
 "imageInput"
 );
+
 
 
 const preview =
@@ -32,10 +41,12 @@ document.getElementById(
 );
 
 
+
 const analyzeBtn =
 document.getElementById(
 "analyzeBtn"
 );
+
 
 
 const resultCard =
@@ -44,10 +55,12 @@ document.getElementById(
 );
 
 
+
 const result =
 document.getElementById(
 "result"
 );
+
 
 
 const saveBtn =
@@ -58,11 +71,14 @@ document.getElementById(
 
 
 
-// Storage
+
+
 
 let selectedImage = null;
 
 let clothingData = null;
+
+
 
 
 
@@ -123,8 +139,12 @@ reader.readAsDataURL(file);
 
 
 
+
+
+
+
 // ================================
-// Analyze Clothing
+// Hybrid AI Analysis
 // ================================
 
 
@@ -137,7 +157,7 @@ if(!selectedImage){
 
 
 alert(
-"Please choose a clothing photo first 👗"
+"Please select a clothing image 👗"
 );
 
 
@@ -160,6 +180,8 @@ analyzeBtn.disabled=true;
 
 
 
+
+
 try{
 
 
@@ -176,10 +198,18 @@ event.target.result;
 
 
 
+
+// Hybrid AI
+// Local + Gemini
+
+
 clothingData =
+
 await analyzeClothing(
 image
 );
+
+
 
 
 
@@ -194,67 +224,63 @@ resultCard.style.display =
 result.innerHTML = `
 
 
-<div>
+<h3>
+✨ FashionAI Result
+</h3>
 
+
+<p>
 👕 <b>Type:</b>
-
 ${clothingData.type || "Unknown"}
-
-</div>
-
-
-<br>
+</p>
 
 
-<div>
+<p>
+📂 <b>Category:</b>
+${clothingData.category || "General Wear"}
+</p>
 
-🎨 <b>Color:</b>
 
+<p>
+🎨 <b>Primary Color:</b>
 ${clothingData.primaryColor || "Unknown"}
-
-</div>
-
+</p>
 
 
-<br>
+<p>
+🎨 <b>Secondary Color:</b>
+${clothingData.secondaryColor || "None"}
+</p>
 
 
-<div>
-
+<p>
 🧵 <b>Material:</b>
-
 ${clothingData.material || "Unknown"}
-
-</div>
-
+</p>
 
 
-<br>
-
-
-<div>
-
+<p>
 ✨ <b>Style:</b>
-
 ${clothingData.style || "Unknown"}
-
-</div>
-
+</p>
 
 
-<br>
-
-
-<div>
-
+<p>
 🎯 <b>Occasion:</b>
+${clothingData.occasion || "Flexible"}
+</p>
 
-${clothingData.occasion || "Unknown"}
 
-</div>
+
+<p>
+🤖 <b>Analyzed By:</b>
+${clothingData.analyzedBy || "Hybrid FashionAI"}
+</p>
 
 
 `;
+
+
 
 
 
@@ -283,21 +309,21 @@ catch(error){
 
 
 console.error(
+"Upload Error:",
 error
 );
 
 
 
-resultCard.style.display=
+resultCard.style.display =
 "block";
 
 
 
-result.innerHTML=
+result.innerHTML =
 
 `
-❌ AI could not analyze this image.
-
+❌ FashionAI could not analyze this image.
 Please try again.
 `;
 
@@ -323,8 +349,10 @@ analyzeBtn.disabled=false;
 
 
 
+
+
 // ================================
-// Save To Wardrobe
+// Save To IndexedDB Wardrobe
 // ================================
 
 
@@ -348,21 +376,86 @@ return;
 
 
 
+
+
 try{
 
 
-await saveClothing({
+const wardrobeItem = {
+
 
 ...clothingData,
 
-image:selectedImage
 
-});
+
+// Save image
+
+image:selectedImage,
+
+
+
+// Ensure sorting fields exist
+
+category:
+
+clothingData.category ||
+"General Wear",
+
+
+
+occasion:
+
+clothingData.occasion ||
+"Flexible",
+
+
+
+style:
+
+clothingData.style ||
+"Everyday",
+
+
+
+matchingItems:
+
+clothingData.matchingItems ||
+[],
+
+
+
+// Date saved
+
+createdAt:
+
+new Date().toISOString()
+
+
+};
+
+
+
+
+
+await saveClothing(
+wardrobeItem
+);
+
+
 
 
 
 alert(
-"❤️ Saved successfully to your wardrobe"
+"❤️ Saved to FashionAI Wardrobe"
+);
+
+
+
+
+
+console.log(
+"Saved:",
+wardrobeItem
 );
 
 
@@ -370,15 +463,23 @@ alert(
 }
 
 
+
+
+
 catch(error){
 
 
-console.error(error);
+console.error(
+"Save Error:",
+error
+);
+
 
 
 alert(
-"Could not save clothing"
+"❌ Could not save clothing"
 );
+
 
 
 }
