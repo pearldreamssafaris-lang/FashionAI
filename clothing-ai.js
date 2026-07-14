@@ -1,5 +1,6 @@
 // =================================
-// FashionAI Hybrid Analyzer
+// FashionAI Hybrid Clothing Analyzer
+// clothing-ai.js
 // =================================
 
 
@@ -17,29 +18,79 @@ from "./local-fashion-ai.js";
 
 
 
+// =================================
+// Analyze Clothing Image
+// =================================
+
+
 export async function analyzeClothing(image){
 
 
 
-// 1. Local analysis first
+// 1. Offline analysis first
 
-const localResult =
-localAnalyze(image);
+let localResult = {
+
+type:"Unknown",
+
+category:"General Wear",
+
+primaryColor:"Unknown",
+
+secondaryColor:"Unknown",
+
+material:"Unknown",
+
+style:"Unknown",
+
+occasion:"Flexible",
+
+matchingItems:[]
+
+};
+
+
+
+try{
+
+
+localResult =
+localAnalyze(image)
+||
+localResult;
+
+
+}
+
+catch(error){
+
+
+console.log(
+"Local AI unavailable"
+);
+
+
+}
 
 
 
 
 
-// 2. Cloud AI enhancement
+
+// 2. Gemini Enhancement
 
 
 const prompt = `
 
-You are FashionAI.
+You are FashionAI, a professional clothing stylist.
 
 Analyze this clothing image.
 
-Return ONLY JSON.
+Return ONLY valid JSON.
+
+Do not add markdown.
+
+Use exactly this format:
 
 {
 "type":"",
@@ -52,7 +103,21 @@ Return ONLY JSON.
 "matchingItems":[]
 }
 
+
+Category must be one of:
+
+Office Wear
+Casual Wear
+Event Wear
+Party Wear
+Travel Wear
+Sport Wear
+General Wear
+
+
 `;
+
+
 
 
 
@@ -60,6 +125,7 @@ try{
 
 
 const aiResult =
+
 await askGemini(
 prompt,
 image
@@ -67,14 +133,24 @@ image
 
 
 
+
+
 const cloudResult =
-JSON.parse(
-aiResult
-);
+
+typeof aiResult === "string"
+
+?
+
+JSON.parse(aiResult)
+
+:
+
+aiResult;
 
 
 
-// Combine results
+
+
 
 return {
 
@@ -86,10 +162,13 @@ return {
 
 
 analyzedBy:
+
 "Hybrid FashionAI"
 
 
+
 };
+
 
 
 
@@ -98,8 +177,14 @@ analyzedBy:
 catch(error){
 
 
-// If internet fails,
-// use offline result
+
+console.log(
+
+"Using Offline FashionAI"
+
+);
+
+
 
 
 return {
@@ -108,17 +193,13 @@ return {
 ...localResult,
 
 
-type:"Unknown",
-
-primaryColor:"Unknown",
-
-style:"Unknown",
-
 analyzedBy:
+
 "Offline FashionAI"
 
 
 };
+
 
 
 }
