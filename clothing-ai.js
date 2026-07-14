@@ -5,13 +5,13 @@
 
 
 import {
-askGemini
+    askGemini
 }
 from "./gemini-ai.js";
 
 
 import {
-localAnalyze
+    localAnalyze
 }
 from "./local-fashion-ai.js";
 
@@ -19,45 +19,40 @@ from "./local-fashion-ai.js";
 
 
 // =================================
-// Analyze Clothing Image
+// Main Analyzer
 // =================================
-
 
 export async function analyzeClothing(image){
 
 
+console.log(
+"🤖 Hybrid FashionAI Started"
+);
 
-// 1. Offline analysis first
 
-let localResult = {
 
-type:"Unknown",
+// =================================
+// 1. Local Fashion AI
+// Always works offline
+// =================================
 
-category:"General Wear",
 
-primaryColor:"Unknown",
-
-secondaryColor:"Unknown",
-
-material:"Unknown",
-
-style:"Unknown",
-
-occasion:"Flexible",
-
-matchingItems:[]
-
-};
-
+let localResult;
 
 
 try{
 
 
 localResult =
-localAnalyze(image)
-||
-localResult;
+localAnalyze(image);
+
+
+
+console.log(
+"LOCAL RESULT:",
+localResult
+);
+
 
 
 }
@@ -66,8 +61,33 @@ catch(error){
 
 
 console.log(
-"Local AI unavailable"
+"Local AI error:",
+error
 );
+
+
+
+localResult = {
+
+
+type:"Unknown",
+
+category:"General Wear",
+
+primaryColor:"Unknown",
+
+secondaryColor:"",
+
+material:"Unknown",
+
+style:"Everyday",
+
+occasion:"Flexible",
+
+matchingItems:[]
+
+
+};
 
 
 }
@@ -77,20 +97,28 @@ console.log(
 
 
 
-// 2. Gemini Enhancement
+
+// =================================
+// 2. Gemini AI Enhancement
+// =================================
+
+
+try{
 
 
 const prompt = `
 
-You are FashionAI, a professional clothing stylist.
+You are FashionAI.
 
 Analyze this clothing image.
 
-Return ONLY valid JSON.
+Return ONLY JSON.
 
-Do not add markdown.
+No markdown.
+No explanation.
 
 Use exactly this format:
+
 
 {
 "type":"",
@@ -104,32 +132,44 @@ Use exactly this format:
 }
 
 
-Category must be one of:
-
-Office Wear
-Casual Wear
-Event Wear
-Party Wear
-Travel Wear
-Sport Wear
-General Wear
-
-
 `;
 
 
 
 
 
-try{
-
-
-const aiResult =
+const response =
 
 await askGemini(
+
 prompt,
+
 image
+
 );
+
+
+
+
+
+
+// Clean Gemini response
+
+const clean =
+
+response
+
+.replace(
+"```json",
+""
+)
+
+.replace(
+"```",
+""
+)
+
+.trim();
 
 
 
@@ -137,20 +177,26 @@ image
 
 const cloudResult =
 
-typeof aiResult === "string"
-
-?
-
-JSON.parse(aiResult)
-
-:
-
-aiResult;
+JSON.parse(
+clean
+);
 
 
 
 
 
+console.log(
+"GEMINI RESULT:",
+cloudResult
+);
+
+
+
+
+
+
+
+// Combine both AI systems
 
 return {
 
@@ -161,13 +207,16 @@ return {
 ...cloudResult,
 
 
+
 analyzedBy:
 
-"Hybrid FashionAI"
+"Hybrid FashionAI + Gemini"
 
 
 
 };
+
+
 
 
 
@@ -180,11 +229,17 @@ catch(error){
 
 console.log(
 
-"Using Offline FashionAI"
+"⚠️ Gemini unavailable - Using Offline FashionAI"
 
 );
 
 
+
+
+
+// =================================
+// Offline fallback
+// =================================
 
 
 return {
@@ -193,9 +248,42 @@ return {
 ...localResult,
 
 
+category:
+
+localResult.category ||
+
+"General Wear",
+
+
+
+occasion:
+
+localResult.occasion ||
+
+"Flexible",
+
+
+
+style:
+
+localResult.style ||
+
+"Everyday",
+
+
+
+matchingItems:
+
+localResult.matchingItems ||
+
+[],
+
+
+
 analyzedBy:
 
-"Offline FashionAI"
+"Offline Hybrid FashionAI"
+
 
 
 };
@@ -203,6 +291,7 @@ analyzedBy:
 
 
 }
+
 
 
 }
