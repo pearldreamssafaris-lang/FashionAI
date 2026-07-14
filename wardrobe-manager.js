@@ -1,53 +1,51 @@
 // ======================================
-// FashionAI Wardrobe Sorting Engine
-// api/wardrobe-engine.js
+// FashionAI Hybrid Wardrobe Manager
 // ======================================
 
 
-export function sortClothing(description = "") {
+import {
 
+getWardrobe,
 
-const text =
-description.toLowerCase();
+saveClothing,
 
+deleteClothing
 
+}
 
-let result = {
-
-
-category:"General Wear",
-
-occasion:"Flexible",
-
-style:"Everyday"
-
-};
+from "./database.js";
 
 
 
+import {
+
+analyzeClothing
+
+}
+
+from "./clothing-ai.js";
 
 
-// Office
 
-if(
-text.includes("blazer") ||
-text.includes("suit") ||
-text.includes("formal") ||
-text.includes("shirt") ||
-text.includes("trouser") ||
-text.includes("business") ||
-text.includes("office")
-){
 
-result = {
 
-category:"Office Wear",
+let wardrobe=[];
 
-occasion:"Work / Business",
 
-style:"Professional"
 
-};
+
+
+// Load wardrobe from IndexedDB
+
+export async function loadWardrobe(){
+
+
+wardrobe =
+await getWardrobe();
+
+
+return wardrobe;
+
 
 }
 
@@ -55,26 +53,48 @@ style:"Professional"
 
 
 
-// Wedding/Event
 
-else if(
-text.includes("gown") ||
-text.includes("dress") ||
-text.includes("heels") ||
-text.includes("elegant") ||
-text.includes("wedding") ||
-text.includes("ceremony")
-){
 
-result = {
+// Add clothing using Hybrid AI
 
-category:"Event Wear",
+export async function addClothing(image){
 
-occasion:"Wedding / Special Event",
 
-style:"Elegant"
+
+const analysis =
+
+await analyzeClothing(image);
+
+
+
+
+
+const item={
+
+
+...analysis,
+
+
+image:image,
+
+
+createdAt:
+
+new Date().toISOString()
+
 
 };
+
+
+
+
+
+await saveClothing(item);
+
+
+
+return item;
+
 
 }
 
@@ -82,26 +102,31 @@ style:"Elegant"
 
 
 
-// Casual
 
-else if(
-text.includes("jeans") ||
-text.includes("t-shirt") ||
-text.includes("tshirt") ||
-text.includes("hoodie") ||
-text.includes("sneaker") ||
-text.includes("casual")
+
+// Search wardrobe
+
+export function searchClothes(
+keyword=""
 ){
 
-result = {
 
-category:"Casual Wear",
+return wardrobe.filter(item=>
 
-occasion:"Daily Wear",
 
-style:"Relaxed"
+JSON.stringify(item)
 
-};
+.toLowerCase()
+
+.includes(
+
+keyword.toLowerCase()
+
+)
+
+
+);
+
 
 }
 
@@ -109,24 +134,23 @@ style:"Relaxed"
 
 
 
-// Travel
 
-else if(
-text.includes("jacket") ||
-text.includes("coat") ||
-text.includes("boots") ||
-text.includes("travel")
+
+// Filter by AI category
+
+export function filterByCategory(
+category
 ){
 
-result = {
 
-category:"Travel Wear",
+return wardrobe.filter(item=>
 
-occasion:"Travel",
 
-style:"Comfortable"
+item.category === category
 
-};
+
+);
+
 
 }
 
@@ -134,24 +158,29 @@ style:"Comfortable"
 
 
 
-// Sport
 
-else if(
-text.includes("sport") ||
-text.includes("gym") ||
-text.includes("shorts") ||
-text.includes("leggings")
+
+// Get clothes for occasion
+
+export function clothesForOccasion(
+occasion
 ){
 
-result = {
 
-category:"Sport Wear",
+return wardrobe.filter(item=>
 
-occasion:"Exercise",
 
-style:"Active"
+item.occasion
+?.toLowerCase()
+.includes(
 
-};
+occasion.toLowerCase()
+
+)
+
+
+);
+
 
 }
 
@@ -159,24 +188,25 @@ style:"Active"
 
 
 
-// Party
 
-else if(
-text.includes("party") ||
-text.includes("night") ||
-text.includes("club") ||
-text.includes("glitter")
-){
 
-result = {
+// Delete clothing
 
-category:"Party Wear",
+export async function removeClothing(id){
 
-occasion:"Entertainment",
 
-style:"Glamorous"
+await deleteClothing(id);
 
-};
+
+
+wardrobe =
+
+wardrobe.filter(
+
+item=>item.id!==id
+
+);
+
 
 }
 
@@ -184,7 +214,40 @@ style:"Glamorous"
 
 
 
-return result;
+
+
+// Generate outfit
+
+export function generateOutfit(
+occasion
+){
+
+
+
+const clothes =
+
+clothesForOccasion(
+occasion
+);
+
+
+
+return {
+
+
+occasion,
+
+
+items:
+
+clothes.slice(0,3),
+
+
+message:
+
+`FashionAI created a ${occasion} outfit`
+
+};
 
 
 }
