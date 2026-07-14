@@ -2,101 +2,145 @@
 // FashionAI Hybrid Gemini API
 // api/gemini.js
 // ======================================
-import { generateFashionAdvice } from "./fashion-engine.js";
+
+import { 
+generateFashionAdvice 
+} from "./fashion-engine.js";
+
+
 import {
 sortClothing
+} from "./wardrobe-engine.js";
+
+
+
+
+
+export default async function handler(req,res){
+
+
+
+console.log("METHOD:",req.method);
+
+console.log("BODY:",req.body);
+
+
+
+
+if(req.method !== "POST"){
+
+
+return res.status(405).json({
+
+error:"Only POST requests allowed"
+
+});
+
+
 }
-from "./wardrobe-engine.js";
-export default async function handler(req, res) {
-
-
-    console.log("METHOD:", req.method);
-    console.log("BODY:", req.body);
-
-
-
-    if (req.method !== "POST") {
-
-        return res.status(405).json({
-
-            error: "Only POST requests allowed"
-
-        });
-
-    }
-
-
-
-    try {
-
-
-        const {
-            prompt,
-            image
-
-        } = req.body || {};
-
-
-
-        if (!prompt) {
-
-            return res.status(400).json({
-
-                error: "Missing prompt"
-
-            });
-
-        }
 
 
 
 
 
-        // Check API key
-
-        if (!process.env.GEMINI_API_KEY) {
+try{
 
 
-            return res.status(200).json({
+const {
 
-                result: fashionFallback(prompt)
+prompt,
 
-            });
+image
 
-
-        }
+}=req.body || {};
 
 
 
 
 
-        const fashionAdvice =
+if(!prompt){
+
+
+return res.status(400).json({
+
+error:"Missing prompt"
+
+});
+
+
+}
+
+
+
+
+
+
+// ================================
+// Offline mode if no key
+// ================================
+
+
+if(!process.env.GEMINI_API_KEY){
+
+
+return res.status(200).json({
+
+result:
+fashionFallback(prompt)
+
+});
+
+
+}
+
+
+
+
+
+const fashionPlan =
+
 generateFashionAdvice(prompt);
 
 
 
-const parts = [
+
+
+
+const parts=[
+
 
 {
 
 text:
 
 `
-You are FashionAI, a professional stylist.
+You are FashionAI.
 
-First consider this fashion plan:
+You are a professional personal stylist.
 
-${fashionAdvice}
+Fashion plan:
+
+${fashionPlan}
 
 
-Now answer the customer question:
+Customer question:
 
 ${prompt}
 
-Give a detailed personalized outfit recommendation.
+
+Give a beautiful personalized fashion answer.
+
+Include:
+- outfit ideas
+- colors
+- accessories
+- shoes
+- styling tips
+
 `
 
 }
+
 
 ];
 
@@ -105,137 +149,190 @@ Give a detailed personalized outfit recommendation.
 
 
 
-        // Add image if uploaded
 
-        if (image) {
+// Image support
 
 
-            const base64Image = image.replace(
+if(image){
 
-                /^data:image\/\w+;base64,/,
 
-                ""
+const base64Image =
 
-            );
+image.replace(
 
+/^data:image\/\w+;base64,/,
 
+""
 
-            const mimeType =
+);
 
-            image.match(
 
-                /^data:(.*?);base64/
 
-            )?.[1] || "image/jpeg";
 
+const mimeType =
 
+image.match(
 
+/^data:(.*?);base64/
 
-            parts.push({
+)?.[1]
 
-                inlineData: {
+||
 
-                    mimeType: mimeType,
+"image/jpeg";
 
-                    data: base64Image
 
-                }
 
-            });
 
 
-        }
+parts.push({
 
 
+inlineData:{
 
 
+mimeType,
 
+data:base64Image
 
 
-        const geminiResponse = await fetch(
+}
 
 
-            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key="
+});
 
-            + process.env.GEMINI_API_KEY,
 
+}
 
-            {
 
 
-                method: "POST",
 
 
-                headers: {
 
-                    "Content-Type":
-                    "application/json"
 
-                },
 
+// ================================
+// Gemini Request
+// ================================
 
-                body: JSON.stringify({
 
-                    contents: [
+const geminiResponse =
 
-                        {
+await fetch(
 
-                            parts: parts
+"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key="
 
-                        }
++
 
-                    ]
+process.env.GEMINI_API_KEY,
 
-                })
+{
 
 
-            }
+method:"POST",
 
 
-        );
+headers:{
 
 
+"Content-Type":
 
+"application/json"
 
 
+},
 
-        const data = await geminiResponse.json();
 
 
+body:JSON.stringify({
 
 
+contents:[
 
+{
 
-        console.log(
-            "GEMINI STATUS:",
-            geminiResponse.status
-        );
+parts
 
+}
 
+]
 
 
+})
 
 
-        // Gemini quota/error fallback
+}
 
-        if (!geminiResponse.ok) {
 
 
-            console.log(
-                "Using FashionAI fallback mode"
-            );
+);
 
 
 
-            return res.status(200).json({
 
-                result:
-                fashionFallback(prompt)
 
-            });
 
 
-        }
+
+const data =
+
+await geminiResponse.json();
+
+
+
+
+
+console.log(
+
+"GEMINI STATUS:",
+
+geminiResponse.status
+
+);
+
+
+
+
+
+console.log(
+
+"GEMINI RESPONSE:",
+
+data
+
+);
+
+
+
+
+
+
+
+
+
+// ================================
+// Gemini failed
+// Use offline FashionAI
+// ================================
+
+
+if(!geminiResponse.ok){
+
+
+
+return res.status(200).json({
+
+result:
+
+fashionFallback(prompt)
+
+});
+
+
+}
+
+
+
 
 
 
@@ -247,23 +344,27 @@ const result =
 data
 ?.candidates?.[0]
 ?.content?.parts?.[0]
-?.text
-||
-fashionFallback(prompt);
+?.text;
 
 
 
 
-// Sort clothing when image exists
-
-let wardrobe = null;
 
 
-if(image && result){
+let wardrobe=null;
+
+
+
+if(image){
 
 
 wardrobe =
-sortClothing(result);
+
+sortClothing(
+
+result || prompt
+
+);
 
 
 }
@@ -271,11 +372,20 @@ sortClothing(result);
 
 
 
+
+
+
 return res.status(200).json({
 
-    result,
+result:
 
-    wardrobe
+result ||
+
+fashionFallback(prompt),
+
+
+wardrobe
+
 
 });
 
@@ -284,341 +394,328 @@ return res.status(200).json({
 
 
 
-// ======================================
-// FashionAI Offline Styling Assistant
-// ======================================
+}
+
+catch(error){
+
+
+console.error(
+
+"SERVER ERROR:",
+
+error
+
+);
+
+
+
+return res.status(200).json({
+
+result:
+
+fashionFallback(prompt)
+
+});
+
+
+}
+
+
+
+}
+
+
+
+
+
+
+
 
 
 // ======================================
 // FashionAI Offline Knowledge Engine
 // ======================================
 
-function fashionFallback(prompt = "") {
 
-    const question = prompt.toLowerCase();
+function fashionFallback(prompt=""){
 
 
-    const answers = [
 
-        {
-            keys:["office","work","job","interview","business"],
-            answer:`
+const question =
+
+prompt.toLowerCase();
+
+
+
+
+
+
+if(
+
+question.includes("office") ||
+
+question.includes("work") ||
+
+question.includes("interview")
+
+){
+
+
+return `
+
 💼 FashionAI Office Style:
 
-For a professional look:
 
 👩 Women:
-- Blazer with blouse
-- Elegant trousers or pencil skirt
-- Simple jewelry
-- Closed heels or flats
+
+• Blazer
+• Elegant blouse
+• Tailored trousers
+• Pencil skirt
+• Closed heels
+
 
 👨 Men:
-- Shirt and trousers
-- Blazer or suit
-- Formal shoes
 
-Best colors:
-🤎 Beige
-🖤 Black
-💙 Navy
-🤍 White
+• Shirt
+• Formal trousers
+• Blazer
+• Formal shoes
 
-Your outfit should look confident and professional.
-`
-        },
-
-
-        {
-            keys:["wedding","marriage","ceremony"],
-            answer:`
-💍 FashionAI Wedding Style:
-
-Choose an elegant outfit:
-
-👗 Dresses, jumpsuits, classy skirts
-✨ Satin, silk, chiffon fabrics
-💎 Gold or silver accessories
-
-Beautiful colors:
-Champagne, gold, blue, pink, emerald.
-
-Dress beautifully while respecting the occasion.
-`
-        },
-
-
-        {
-            keys:["casual","weekend","daily","everyday"],
-            answer:`
-🌿 FashionAI Casual Style:
-
-Try:
-
-👕 Comfortable tops
-👖 Jeans or relaxed trousers
-👟 Sneakers or flats
-👜 Simple accessories
 
 Colors:
-White, beige, denim blue, earth tones.
-`
-        },
 
-
-        {
-            keys:["party","night","club","birthday"],
-            answer:`
-✨ FashionAI Party Style:
-
-Try:
-
-👗 Statement dresses
-💎 Bold accessories
-👠 Stylish heels
-👜 A beautiful handbag
-
-Popular colors:
-Black, gold, red, silver.
-`
-        },
-
-
-        {
-            keys:["travel","trip","airport"],
-            answer:`
-✈️ FashionAI Travel Style:
-
-Comfort meets style:
-
-- Comfortable trousers
-- Light jacket
-- Sneakers
-- Crossbody bag
-- Simple layers
-
-Choose breathable fabrics.
-`
-        },
-
-
-        {
-            keys:["black dress"],
-            answer:`
-🖤 Styling a Black Dress:
-
-Match it with:
-
-💎 Gold jewelry for luxury
-🤍 White accessories for elegance
-❤️ Red lipstick for confidence
-👠 Heels for a glamorous look.
-`
-        },
-
-
-        {
-            keys:["blue","navy"],
-            answer:`
-💙 Blue Fashion Tips:
-
-Blue matches beautifully with:
-
-🤍 White
 🤎 Beige
-✨ Gold
+
+💙 Navy
+
 🖤 Black
 
-Navy blue is excellent for professional outfits.
-`
-        },
+🤍 White
 
 
-        {
-            keys:["color","colour","match"],
-            answer:`
-🎨 FashionAI Color Guide:
+Look professional and confident.
 
-Beautiful combinations:
+`;
 
-🤎 Beige + Gold
-💙 Blue + White
-🖤 Black + Gold
-💚 Green + Gold
-🧡 Orange + Beige
-
-Choose colors that match your personality.
-`
-        },
+}
 
 
-        {
-            keys:["shoes","shoe"],
-            answer:`
-👠 FashionAI Shoe Guide:
-
-Office:
-- Loafers
-- Closed heels
-- Formal shoes
-
-Casual:
-- Sneakers
-- Flats
-
-Events:
-- Heels
-- Elegant shoes
-
-Choose shoes based on your outfit and occasion.
-`
-        },
 
 
-        {
-            keys:["accessories","jewelry","jewellery"],
-            answer:`
-💎 FashionAI Accessories:
 
-Complete your look with:
+if(
 
-- Earrings
-- Watches
-- Necklaces
-- Handbags
-- Belts
-- Sunglasses
+question.includes("wedding") ||
 
-Keep accessories balanced.
-`
-        },
+question.includes("ceremony")
+
+){
 
 
-        {
-            keys:["dress","outfit","wear"],
-            answer:`
-👗 FashionAI Outfit Advice:
+return `
 
-Tell me your occasion:
+💍 FashionAI Wedding Style:
 
-💼 Office
-💍 Wedding
-🌿 Casual
-✨ Party
-✈️ Travel
-
-I will suggest a suitable outfit.
-`
-        },
-
-
-        {
-            keys:["body","shape","size"],
-            answer:`
-✨ FashionAI Body Styling:
-
-Choose clothes that make you comfortable.
-
-Tips:
-- Wear correct fitting clothes
-- Highlight your favorite features
-- Choose colors you love
-- Confidence makes every outfit better.
-`
-        },
-
-
-        {
-            keys:["trend","trending","fashion"],
-            answer:`
-🌟 FashionAI Trend Advice:
-
-Modern fashion focuses on:
-
-- Clean designs
-- Quality basics
-- Neutral colors
-- Statement accessories
-- Personal style.
-`
-        },
-
-
-        {
-            keys:["summer","hot"],
-            answer:`
-☀️ Summer Style:
 
 Choose:
 
-- Light fabrics
-- Cotton dresses
-- Loose shirts
-- Sandals
-- Bright colors
+👗 Elegant dress
 
-Stay comfortable and stylish.
-`
-        },
+✨ Satin or silk
+
+💎 Jewelry
+
+👠 Beautiful heels
 
 
-        {
-            keys:["winter","cold"],
-            answer:`
-❄️ Cold Weather Style:
+Colors:
+
+Gold
+
+Champagne
+
+Blue
+
+Pink
+
+Emerald
+
+
+Be elegant and comfortable.
+
+`;
+
+}
+
+
+
+
+
+
+
+if(
+
+question.includes("party") ||
+
+question.includes("birthday")
+
+){
+
+
+return `
+
+✨ FashionAI Party Look:
+
 
 Try:
 
-- Jackets
-- Coats
-- Sweaters
-- Boots
-- Layered outfits
-`
-        }
+👗 Statement dress
 
-    ];
+💎 Accessories
+
+👠 Heels
+
+👜 Stylish handbag
 
 
+Colors:
 
-    for (let item of answers) {
+Black
 
-        for (let key of item.keys) {
+Gold
 
-            if(question.includes(key)) {
+Red
 
-                return item.answer;
+Silver
 
-            }
+`;
 
-        }
-
-    }
+}
 
 
 
-    // Unknown questions
 
-    return `
+
+
+
+if(
+
+question.includes("casual") ||
+
+question.includes("daily") ||
+
+question.includes("weekend")
+
+){
+
+
+return `
+
+🌿 FashionAI Casual Style:
+
+
+Try:
+
+👕 Comfortable top
+
+👖 Jeans
+
+👟 Sneakers
+
+👜 Simple accessories
+
+
+Style:
+
+Relaxed but fashionable.
+
+`;
+
+}
+
+
+
+
+
+
+
+
+if(
+
+question.includes("wear") ||
+
+question.includes("outfit") ||
+
+question.includes("dress")
+
+){
+
+
+return `
+
+👗 FashionAI Outfit Suggestion:
+
+
+Tell me:
+
+• Occasion
+• Weather
+• Your preferred style
+
+
+I can create:
+
+💼 Office outfits
+
+💍 Wedding outfits
+
+✨ Party looks
+
+🌿 Casual styles
+
+✈️ Travel outfits
+
+`;
+
+}
+
+
+
+
+
+
+return `
+
 🤖 FashionAI:
 
-I don't know that style question yet, but I am still learning.
 
-You can ask me about:
+I am still learning that style question.
 
-👗 Outfits
+
+I can help with:
+
+👗 Outfit ideas
+
 💼 Office wear
-💍 Wedding style
-✨ Party looks
-🎨 Color matching
-👠 Shoes
-💎 Accessories
-🌟 Fashion trends
 
-Try asking:
+💍 Weddings
+
+✨ Parties
+
+🎨 Color matching
+
+👠 Shoes
+
+💎 Accessories
+
+
+Try:
+
 "What should I wear to work?"
+
 "How do I style a black dress?"
-"What colors match beige?"
+
 `;
 
 }
