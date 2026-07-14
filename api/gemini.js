@@ -3,16 +3,26 @@
 // api/gemini.js
 // ======================================
 
+
 export default async function handler(req, res) {
 
+
+    console.log("BODY:", req.body);
+
+
+
+    // Only allow POST
 
     if (req.method !== "POST") {
 
         return res.status(405).json({
+
             error: "Only POST requests allowed"
+
         });
 
     }
+
 
 
     try {
@@ -21,32 +31,62 @@ export default async function handler(req, res) {
         const {
             prompt,
             image
-        } = req.body;
+
+        } = req.body || {};
+
+
+
+        console.log("PROMPT:", prompt);
+        console.log("IMAGE RECEIVED:", !!image);
 
 
 
         if (!process.env.GEMINI_API_KEY) {
 
+
             return res.status(500).json({
+
                 error: "Missing GEMINI_API_KEY"
+
             });
+
+
+        }
+
+
+
+        if (!prompt) {
+
+
+            return res.status(400).json({
+
+                error: "Missing prompt"
+
+            });
+
 
         }
 
 
 
         const parts = [
+
             {
+
                 text: prompt
+
             }
+
         ];
 
 
 
-        if(image){
+        // Add image
+
+        if (image) {
 
 
-            const base64 =
+            const base64Image =
             image.replace(
                 /^data:image\/\w+;base64,/,
                 ""
@@ -54,10 +94,17 @@ export default async function handler(req, res) {
 
 
 
-            const mime =
+            const mimeMatch =
             image.match(
                 /^data:(.*?);base64/
-            )[1];
+            );
+
+
+
+            const mimeType =
+            mimeMatch
+            ? mimeMatch[1]
+            : "image/jpeg";
 
 
 
@@ -65,9 +112,9 @@ export default async function handler(req, res) {
 
                 inlineData: {
 
-                    mimeType: mime,
+                    mimeType: mimeType,
 
-                    data: base64
+                    data: base64Image
 
                 }
 
@@ -78,18 +125,23 @@ export default async function handler(req, res) {
 
 
 
-        const geminiResponse =
-        await fetch(
 
-            "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key="
+        console.log("Sending request to Gemini");
+
+
+
+        const response = await fetch(
+
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key="
             + process.env.GEMINI_API_KEY,
 
 
             {
 
-                method:"POST",
+                method: "POST",
 
-                headers:{
+
+                headers: {
 
                     "Content-Type":
                     "application/json"
@@ -97,12 +149,14 @@ export default async function handler(req, res) {
                 },
 
 
-                body:JSON.stringify({
+                body: JSON.stringify({
 
-                    contents:[
+                    contents: [
 
                         {
-                            parts
+
+                            parts: parts
+
                         }
 
                     ]
@@ -111,50 +165,77 @@ export default async function handler(req, res) {
 
             }
 
-
         );
 
 
 
-        const result =
-        await geminiResponse.json();
+
+
+        const data =
+        await response.json();
 
 
 
-        if(result.error){
+        console.log(
+            "GEMINI RESPONSE:",
+            JSON.stringify(data)
+        );
+
+
+
+
+
+        if (data.error) {
+
 
             return res.status(500).json({
 
                 error:
-                result.error.message
+                data.error.message
 
             });
+
 
         }
 
 
 
-        const text =
-        result
-        ?.candidates?.[0]
-        ?.content?.parts?.[0]
+
+
+        const result =
+
+        data
+        ?.candidates
+        ?. [0]
+        ?.content
+        ?.parts
+        ?. [0]
         ?.text;
+
+
 
 
 
         return res.status(200).json({
 
             result:
-            text || "No response"
+            result || "No AI response"
 
         });
 
 
 
-    } catch(error){
 
 
-        console.error(error);
+    } catch(error) {
+
+
+
+        console.error(
+            "SERVER ERROR:",
+            error
+        );
+
 
 
         return res.status(500).json({
@@ -166,5 +247,6 @@ export default async function handler(req, res) {
 
 
     }
+
 
 }
