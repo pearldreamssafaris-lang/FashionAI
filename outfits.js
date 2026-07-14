@@ -1,198 +1,139 @@
+// ======================================
+// FashionAI Clothing AI Analyzer
+// clothing-ai.js
+// ======================================
+
+
 import {
-getWardrobe
+    askGemini
 }
-from "./database.js";
-
-
-
-let wardrobe=[];
-
-
-
-const createBtn =
-document.getElementById(
-"createOutfit"
-);
-
-
-
-const result =
-document.getElementById(
-"outfitResult"
-);
-
-
-
-const display =
-document.getElementById(
-"outfitDisplay"
-);
-
-
-
-let generatedOutfit={};
+from "./gemini-ai.js";
 
 
 
 
-// Load clothes
 
-async function load(){
+export async function analyzeClothing(image){
 
-wardrobe =
-await getWardrobe();
 
+    const prompt = `
+
+You are FashionAI, a professional fashion stylist.
+
+Analyze this clothing image.
+
+Return ONLY valid JSON.
+
+Do not use markdown.
+Do not add explanations.
+
+Use exactly this format:
+
+{
+"type":"",
+"category":"",
+"primaryColor":"",
+"secondaryColor":"",
+"material":"",
+"style":"",
+"occasion":"",
+"matchingItems":[]
 }
-
-
-load();
-
-
-
-
-
-
-// Create Outfit
-
-
-createBtn.onclick =
-async()=>{
-
-
-if(wardrobe.length < 3){
-
-
-alert(
-"Add more clothes to your wardrobe first 👗"
-);
-
-
-return;
-
-}
-
-
-
-
-const shirt =
-findItem("shirt");
-
-
-const pants =
-findItem("pant") ||
-findItem("jean");
-
-
-const shoes =
-findItem("shoe");
-
-
-
-
-
-generatedOutfit={
-
-top:
-shirt || wardrobe[0],
-
-bottom:
-pants || wardrobe[1],
-
-footwear:
-shoes || wardrobe[2],
-
-score:
-95
-
-
-};
-
-
-
-
-
-result.style.display=
-"block";
-
-
-
-display.innerHTML=`
-
-👕 
-${generatedOutfit.top.type}
-
-<br><br>
-
-
-👖
-${generatedOutfit.bottom.type}
-
-
-<br><br>
-
-
-👟
-${generatedOutfit.footwear.type}
-
-
-<br><br>
-
-
-⭐ Style Score:
-${generatedOutfit.score}/100
-
 
 `;
 
 
 
-};
+
+    try {
+
+
+
+        const response = await askGemini(
+            prompt,
+            image
+        );
+
+
+
+
+        // Remove possible markdown if Gemini adds it
+
+        const cleanResponse =
+        response
+        .replace(/```json/g,"")
+        .replace(/```/g,"")
+        .trim();
 
 
 
 
 
+        const clothingData =
+        JSON.parse(cleanResponse);
 
 
-function findItem(word){
 
 
-return wardrobe.find(item=>
 
-JSON.stringify(item)
-.toLowerCase()
-.includes(word)
+        return {
 
-);
+
+            ...clothingData,
+
+
+            analyzedBy:
+            "FashionAI Gemini Vision"
+
+
+        };
+
+
+
+
+    }
+
+
+
+    catch(error){
+
+
+        console.error(
+            "Clothing AI Error:",
+            error
+        );
+
+
+
+        return {
+
+
+            type:"Unknown",
+
+            category:"Unknown",
+
+            primaryColor:"Unknown",
+
+            secondaryColor:"Unknown",
+
+            material:"Unknown",
+
+            style:"Unknown",
+
+            occasion:"Unknown",
+
+            matchingItems:[],
+
+
+            analyzedBy:
+            "AI Error"
+
+
+        };
+
+
+
+    }
 
 
 }
-
-
-
-
-
-
-document
-.getElementById("favoriteBtn")
-.onclick=()=>{
-
-
-localStorage.setItem(
-
-"favoriteOutfit",
-
-JSON.stringify(
-generatedOutfit
-)
-
-);
-
-
-
-alert(
-"Outfit saved ❤️"
-);
-
-
-};
