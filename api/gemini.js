@@ -75,7 +75,6 @@ export default async function handler(req, res) {
 
 
 
-
         const parts = [
 
             {
@@ -90,22 +89,31 @@ export default async function handler(req, res) {
 
 
 
-        // Add image if uploaded
+
+        // Add image if available
 
         if (image) {
 
 
             const base64Image = image.replace(
+
                 /^data:image\/\w+;base64,/,
+
                 ""
+
             );
 
 
 
             const mimeType =
+
             image.match(
+
                 /^data:(.*?);base64/
+
             )?.[1] || "image/jpeg";
+
+
 
 
 
@@ -128,6 +136,7 @@ export default async function handler(req, res) {
 
 
 
+
         console.log(
             "Sending request to Gemini..."
         );
@@ -145,6 +154,7 @@ export default async function handler(req, res) {
 
             {
 
+
                 method: "POST",
 
 
@@ -154,6 +164,7 @@ export default async function handler(req, res) {
                     "application/json"
 
                 },
+
 
 
                 body: JSON.stringify({
@@ -181,8 +192,8 @@ export default async function handler(req, res) {
 
 
 
-        const data =
-        await geminiResponse.json();
+        const data = await geminiResponse.json();
+
 
 
 
@@ -195,13 +206,21 @@ export default async function handler(req, res) {
 
 
 
-        console.log(
-            "GEMINI FULL RESPONSE:",
-            JSON.stringify(
-                data,
-                null,
-                2
-            )
+        console.error(
+            "GEMINI ERROR MESSAGE:",
+            data.error?.message
+        );
+
+
+        console.error(
+            "GEMINI ERROR CODE:",
+            data.error?.code
+        );
+
+
+        console.error(
+            "GEMINI ERROR STATUS:",
+            data.error?.status
         );
 
 
@@ -216,12 +235,7 @@ export default async function handler(req, res) {
 
                 error:
                 data.error?.message ||
-                "Gemini request failed",
-
-
-                details:
-                data
-
+                "Gemini request failed"
 
             });
 
@@ -234,6 +248,7 @@ export default async function handler(req, res) {
 
 
         const result =
+
         data
         ?.candidates?.[0]
         ?.content?.parts?.[0]
@@ -259,10 +274,9 @@ export default async function handler(req, res) {
     } catch(error) {
 
 
-
         console.error(
             "SERVER ERROR:",
-            error
+            error.message
         );
 
 
