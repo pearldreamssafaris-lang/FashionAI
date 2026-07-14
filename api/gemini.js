@@ -1,5 +1,5 @@
 // ======================================
-// FashionAI Gemini Vision API
+// FashionAI Gemini API
 // api/gemini.js
 // ======================================
 
@@ -13,21 +13,17 @@ export default async function handler(req, res) {
 
     if (req.method !== "POST") {
 
-
         return res.status(405).json({
 
             error: "Only POST requests allowed"
 
         });
 
-
     }
 
 
 
-
     try {
-
 
 
         const {
@@ -42,9 +38,8 @@ export default async function handler(req, res) {
 
         console.log(
             "IMAGE RECEIVED:",
-            !!image
+            Boolean(image)
         );
-
 
 
 
@@ -63,25 +58,7 @@ export default async function handler(req, res) {
 
 
 
-
-        if (!prompt) {
-
-
-            return res.status(400).json({
-
-                error: "Missing prompt"
-
-            });
-
-
-        }
-
-
-
-
-
         const parts = [
-
 
             {
 
@@ -89,18 +66,15 @@ export default async function handler(req, res) {
 
             }
 
-
         ];
 
 
 
 
 
-
-        // Add image when available
+        // Add image if available
 
         if (image) {
-
 
 
             const base64Image =
@@ -115,47 +89,28 @@ export default async function handler(req, res) {
 
 
 
-
-            const mimeMatch =
+            const mimeType =
 
             image.match(
 
                 /^data:(.*?);base64/
 
-            );
-
-
-
-
-            const mimeType =
-
-            mimeMatch
-
-            ? mimeMatch[1]
-
-            : "image/jpeg";
-
+            )?.[1] || "image/jpeg";
 
 
 
 
             parts.push({
 
+                inline_data: {
 
-                inlineData: {
-
-
-                    mimeType: mimeType,
-
+                    mime_type: mimeType,
 
                     data: base64Image
 
-
                 }
 
-
             });
-
 
 
         }
@@ -173,14 +128,12 @@ export default async function handler(req, res) {
 
 
 
+        const geminiResponse = await fetch(
 
-        const response = await fetch(
 
-
-            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key="
+            "https://generativelanguages.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key="
 
             + process.env.GEMINI_API_KEY,
-
 
 
             {
@@ -189,14 +142,11 @@ export default async function handler(req, res) {
                 method: "POST",
 
 
-
                 headers: {
-
 
                     "Content-Type":
 
                     "application/json"
-
 
                 },
 
@@ -205,31 +155,23 @@ export default async function handler(req, res) {
                 body: JSON.stringify({
 
 
-
                     contents: [
-
 
 
                         {
 
-
                             parts: parts
 
-
                         }
-
 
 
                     ]
 
 
-
                 })
 
 
-
             }
-
 
 
         );
@@ -238,10 +180,8 @@ export default async function handler(req, res) {
 
 
 
-
         const data =
-
-        await response.json();
+        await geminiResponse.json();
 
 
 
@@ -251,7 +191,11 @@ export default async function handler(req, res) {
 
             "GEMINI RESPONSE:",
 
-            JSON.stringify(data)
+            JSON.stringify(
+                data,
+                null,
+                2
+            )
 
         );
 
@@ -259,22 +203,20 @@ export default async function handler(req, res) {
 
 
 
+        if (!geminiResponse.ok) {
 
 
-        if (data.error) {
-
-
-
-            return res.status(500).json({
-
+            return res.status(
+                geminiResponse.status
+            ).json({
 
                 error:
 
-                data.error.message
+                data.error?.message ||
 
+                "Gemini request failed"
 
             });
-
 
 
         }
@@ -284,28 +226,56 @@ export default async function handler(req, res) {
 
 
 
-
         const result =
 
-
         data
-
-        ?.candidates
-
-        ?. [0]
-
-        ?.content
-
-        ?.parts
-
-        ?. [0]
-
+        ?.candidates?.[0]
+        ?.content?.parts?.[0]
         ?.text;
 
 
 
 
 
+
+        return res.status(200).json({
+
+            result:
+
+            result ||
+
+            "No AI response"
+
+        });
+
+
+
+
+
+
+    } catch(error) {
+
+
+
+        console.error(
+            "SERVER ERROR:",
+            error
+        );
+
+
+
+        return res.status(500).json({
+
+            error:
+            error.message
+
+        });
+
+
+    }
+
+
+}
 
 
 
