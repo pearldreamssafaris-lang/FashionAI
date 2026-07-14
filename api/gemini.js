@@ -285,96 +285,336 @@ export default async function handler(req, res) {
 // ======================================
 
 
+// ======================================
+// FashionAI Offline Knowledge Engine
+// ======================================
+
 function fashionFallback(prompt = "") {
 
-
-    const question =
-    prompt.toLowerCase();
+    const question = prompt.toLowerCase();
 
 
+    const answers = [
+
+        {
+            keys:["office","work","job","interview","business"],
+            answer:`
+💼 FashionAI Office Style:
+
+For a professional look:
+
+👩 Women:
+- Blazer with blouse
+- Elegant trousers or pencil skirt
+- Simple jewelry
+- Closed heels or flats
+
+👨 Men:
+- Shirt and trousers
+- Blazer or suit
+- Formal shoes
+
+Best colors:
+🤎 Beige
+🖤 Black
+💙 Navy
+🤍 White
+
+Your outfit should look confident and professional.
+`
+        },
+
+
+        {
+            keys:["wedding","marriage","ceremony"],
+            answer:`
+💍 FashionAI Wedding Style:
+
+Choose an elegant outfit:
+
+👗 Dresses, jumpsuits, classy skirts
+✨ Satin, silk, chiffon fabrics
+💎 Gold or silver accessories
+
+Beautiful colors:
+Champagne, gold, blue, pink, emerald.
+
+Dress beautifully while respecting the occasion.
+`
+        },
+
+
+        {
+            keys:["casual","weekend","daily","everyday"],
+            answer:`
+🌿 FashionAI Casual Style:
+
+Try:
+
+👕 Comfortable tops
+👖 Jeans or relaxed trousers
+👟 Sneakers or flats
+👜 Simple accessories
+
+Colors:
+White, beige, denim blue, earth tones.
+`
+        },
+
+
+        {
+            keys:["party","night","club","birthday"],
+            answer:`
+✨ FashionAI Party Style:
+
+Try:
+
+👗 Statement dresses
+💎 Bold accessories
+👠 Stylish heels
+👜 A beautiful handbag
+
+Popular colors:
+Black, gold, red, silver.
+`
+        },
+
+
+        {
+            keys:["travel","trip","airport"],
+            answer:`
+✈️ FashionAI Travel Style:
+
+Comfort meets style:
+
+- Comfortable trousers
+- Light jacket
+- Sneakers
+- Crossbody bag
+- Simple layers
+
+Choose breathable fabrics.
+`
+        },
+
+
+        {
+            keys:["black dress"],
+            answer:`
+🖤 Styling a Black Dress:
+
+Match it with:
+
+💎 Gold jewelry for luxury
+🤍 White accessories for elegance
+❤️ Red lipstick for confidence
+👠 Heels for a glamorous look.
+`
+        },
+
+
+        {
+            keys:["blue","navy"],
+            answer:`
+💙 Blue Fashion Tips:
+
+Blue matches beautifully with:
+
+🤍 White
+🤎 Beige
+✨ Gold
+🖤 Black
+
+Navy blue is excellent for professional outfits.
+`
+        },
+
+
+        {
+            keys:["color","colour","match"],
+            answer:`
+🎨 FashionAI Color Guide:
+
+Beautiful combinations:
+
+🤎 Beige + Gold
+💙 Blue + White
+🖤 Black + Gold
+💚 Green + Gold
+🧡 Orange + Beige
+
+Choose colors that match your personality.
+`
+        },
+
+
+        {
+            keys:["shoes","shoe"],
+            answer:`
+👠 FashionAI Shoe Guide:
+
+Office:
+- Loafers
+- Closed heels
+- Formal shoes
+
+Casual:
+- Sneakers
+- Flats
+
+Events:
+- Heels
+- Elegant shoes
+
+Choose shoes based on your outfit and occasion.
+`
+        },
+
+
+        {
+            keys:["accessories","jewelry","jewellery"],
+            answer:`
+💎 FashionAI Accessories:
+
+Complete your look with:
+
+- Earrings
+- Watches
+- Necklaces
+- Handbags
+- Belts
+- Sunglasses
+
+Keep accessories balanced.
+`
+        },
+
+
+        {
+            keys:["dress","outfit","wear"],
+            answer:`
+👗 FashionAI Outfit Advice:
+
+Tell me your occasion:
+
+💼 Office
+💍 Wedding
+🌿 Casual
+✨ Party
+✈️ Travel
+
+I will suggest a suitable outfit.
+`
+        },
+
+
+        {
+            keys:["body","shape","size"],
+            answer:`
+✨ FashionAI Body Styling:
+
+Choose clothes that make you comfortable.
+
+Tips:
+- Wear correct fitting clothes
+- Highlight your favorite features
+- Choose colors you love
+- Confidence makes every outfit better.
+`
+        },
+
+
+        {
+            keys:["trend","trending","fashion"],
+            answer:`
+🌟 FashionAI Trend Advice:
+
+Modern fashion focuses on:
+
+- Clean designs
+- Quality basics
+- Neutral colors
+- Statement accessories
+- Personal style.
+`
+        },
+
+
+        {
+            keys:["summer","hot"],
+            answer:`
+☀️ Summer Style:
+
+Choose:
+
+- Light fabrics
+- Cotton dresses
+- Loose shirts
+- Sandals
+- Bright colors
+
+Stay comfortable and stylish.
+`
+        },
+
+
+        {
+            keys:["winter","cold"],
+            answer:`
+❄️ Cold Weather Style:
+
+Try:
+
+- Jackets
+- Coats
+- Sweaters
+- Boots
+- Layered outfits
+`
+        }
+
+    ];
 
 
 
-    if (
-        question.includes("wear") ||
-        question.includes("outfit")
-    ) {
+    for (let item of answers) {
 
+        for (let key of item.keys) {
 
-        return (
+            if(question.includes(key)) {
 
-        "✨ FashionAI Smart Style Suggestion:\n\n" +
+                return item.answer;
 
-        "For a beautiful everyday look, try a balanced outfit:\n\n" +
+            }
 
-        "👗 Top: A clean blouse, shirt, or fitted top.\n" +
-
-        "👖 Bottom: Well-fitted trousers, skirt, or elegant jeans.\n" +
-
-        "👠 Shoes: Choose shoes that match the occasion.\n" +
-
-        "💎 Accessories: Add a statement bag, watch, or gold jewelry.\n\n" +
-
-        "Colors that always work well together:\n" +
-
-        "🤎 Beige + Gold\n" +
-
-        "💙 Blue + White\n" +
-
-        "🖤 Black + Gold\n\n" +
-
-        "Make sure your outfit matches your confidence and personality."
-
-        );
-
+        }
 
     }
 
 
 
+    // Unknown questions
 
+    return `
+🤖 FashionAI:
 
+I don't know that style question yet, but I am still learning.
 
-    if (
-        question.includes("color") ||
-        question.includes("colour")
-    ) {
+You can ask me about:
 
+👗 Outfits
+💼 Office wear
+💍 Wedding style
+✨ Party looks
+🎨 Color matching
+👠 Shoes
+💎 Accessories
+🌟 Fashion trends
 
-        return (
-
-        "🎨 FashionAI Color Advice:\n\n" +
-
-        "Neutral colors are easy to style:\n" +
-
-        "• Beige\n" +
-        "• White\n" +
-        "• Black\n" +
-        "• Navy\n\n" +
-
-        "Add gold or orange accents for a luxurious fashion look."
-
-        );
-
-
-    }
-
-
-
-
-
-
-    return (
-
-    "✨ FashionAI is currently in Smart Mode.\n\n" +
-
-    "I can help you with outfits, colors, occasions, and styling ideas. " +
-
-    "Try asking: 'What should I wear for a wedding?' or " +
-
-    "'How do I style a black dress?'"
-
-    );
-
+Try asking:
+"What should I wear to work?"
+"How do I style a black dress?"
+"What colors match beige?"
+`;
 
 }
