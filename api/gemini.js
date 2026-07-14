@@ -4,13 +4,8 @@
 // =====================================
 
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
 
-
-try{
-
-
-// Only allow POST
 
 if(req.method !== "POST"){
 
@@ -24,21 +19,14 @@ error:"Only POST requests allowed"
 
 
 
-
-const {
-
-prompt,
-image
-
-} = req.body;
+try{
 
 
+const {prompt,image} = req.body;
 
 
-// Check API key
 
 if(!process.env.GEMINI_API_KEY){
-
 
 return res.status(500).json({
 
@@ -46,16 +34,17 @@ error:"Missing GEMINI_API_KEY"
 
 });
 
-
 }
 
 
 
 
+const response = await fetch(
 
-const geminiResponse = await fetch(
+"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key="
++
+process.env.GEMINI_API_KEY,
 
-`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
 
 {
 
@@ -96,17 +85,12 @@ text:prompt
 
 
 
-
-
 const data =
-await geminiResponse.json();
-
-
+await response.json();
 
 
 
 if(data.error){
-
 
 return res.status(500).json({
 
@@ -114,9 +98,7 @@ error:data.error.message
 
 });
 
-
 }
-
 
 
 
@@ -124,7 +106,6 @@ error:data.error.message
 return res.status(200).json({
 
 result:
-
 data.candidates[0]
 .content
 .parts[0]
@@ -139,11 +120,7 @@ data.candidates[0]
 catch(error){
 
 
-console.error(
-"FashionAI API ERROR:",
-error
-);
-
+console.log(error);
 
 
 return res.status(500).json({
@@ -156,4 +133,4 @@ error:error.message
 }
 
 
-}
+};
