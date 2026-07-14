@@ -2,7 +2,7 @@
 // FashionAI Hybrid Gemini API
 // api/gemini.js
 // ======================================
-
+import { generateFashionAdvice } from "./fashion-engine.js";
 
 export default async function handler(req, res) {
 
@@ -67,15 +67,35 @@ export default async function handler(req, res) {
 
 
 
-        const parts = [
+        const fashionAdvice =
+generateFashionAdvice(prompt);
 
-            {
 
-                text: prompt
 
-            }
+const parts = [
 
-        ];
+{
+
+text:
+
+`
+You are FashionAI, a professional stylist.
+
+First consider this fashion plan:
+
+${fashionAdvice}
+
+
+Now answer the customer question:
+
+${prompt}
+
+Give a detailed personalized outfit recommendation.
+`
+
+}
+
+];
 
 
 
