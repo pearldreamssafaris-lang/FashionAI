@@ -3,7 +3,10 @@
 // api/gemini.js
 // ======================================
 import { generateFashionAdvice } from "./fashion-engine.js";
-
+import {
+sortClothing
+}
+from "./wardrobe-engine.js";
 export default async function handler(req, res) {
 
 
