@@ -11,9 +11,8 @@ export default async function handler(req, res) {
 
 
 
-    // Only allow POST
-
     if (req.method !== "POST") {
+
 
         return res.status(405).json({
 
@@ -21,11 +20,14 @@ export default async function handler(req, res) {
 
         });
 
+
     }
 
 
 
+
     try {
+
 
 
         const {
@@ -37,7 +39,12 @@ export default async function handler(req, res) {
 
 
         console.log("PROMPT:", prompt);
-        console.log("IMAGE RECEIVED:", !!image);
+
+        console.log(
+            "IMAGE RECEIVED:",
+            !!image
+        );
+
 
 
 
@@ -55,6 +62,8 @@ export default async function handler(req, res) {
 
 
 
+
+
         if (!prompt) {
 
 
@@ -69,7 +78,10 @@ export default async function handler(req, res) {
 
 
 
+
+
         const parts = [
+
 
             {
 
@@ -77,48 +89,73 @@ export default async function handler(req, res) {
 
             }
 
+
         ];
 
 
 
-        // Add image
+
+
+
+        // Add image when available
 
         if (image) {
 
 
+
             const base64Image =
+
             image.replace(
+
                 /^data:image\/\w+;base64,/,
+
                 ""
+
             );
+
 
 
 
             const mimeMatch =
+
             image.match(
+
                 /^data:(.*?);base64/
+
             );
 
 
 
+
             const mimeType =
+
             mimeMatch
+
             ? mimeMatch[1]
+
             : "image/jpeg";
+
+
 
 
 
             parts.push({
 
+
                 inlineData: {
+
 
                     mimeType: mimeType,
 
+
                     data: base64Image
+
 
                 }
 
+
             });
+
 
 
         }
@@ -126,60 +163,99 @@ export default async function handler(req, res) {
 
 
 
-        console.log("Sending request to Gemini");
+
+
+        console.log(
+            "Sending request to Gemini..."
+        );
+
+
+
 
 
 
         const response = await fetch(
 
-            "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key="
+
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key="
+
             + process.env.GEMINI_API_KEY,
+
 
 
             {
 
+
                 method: "POST",
+
 
 
                 headers: {
 
+
                     "Content-Type":
+
                     "application/json"
+
 
                 },
 
 
+
                 body: JSON.stringify({
+
+
 
                     contents: [
 
+
+
                         {
+
 
                             parts: parts
 
+
                         }
+
+
 
                     ]
 
+
+
                 })
+
+
 
             }
 
+
+
         );
+
 
 
 
 
 
         const data =
+
         await response.json();
 
 
 
+
+
         console.log(
+
             "GEMINI RESPONSE:",
+
             JSON.stringify(data)
+
         );
+
+
 
 
 
@@ -188,12 +264,17 @@ export default async function handler(req, res) {
         if (data.error) {
 
 
+
             return res.status(500).json({
 
+
                 error:
+
                 data.error.message
 
+
             });
+
 
 
         }
@@ -202,15 +283,27 @@ export default async function handler(req, res) {
 
 
 
+
+
         const result =
 
+
         data
+
         ?.candidates
+
         ?. [0]
+
         ?.content
+
         ?.parts
+
         ?. [0]
+
         ?.text;
+
+
+
 
 
 
@@ -218,10 +311,17 @@ export default async function handler(req, res) {
 
         return res.status(200).json({
 
+
             result:
+
             result || "No AI response"
 
+
         });
+
+
+
+
 
 
 
@@ -232,21 +332,29 @@ export default async function handler(req, res) {
 
 
         console.error(
+
             "SERVER ERROR:",
+
             error
+
         );
 
 
 
         return res.status(500).json({
 
+
             error:
+
             error.message
+
 
         });
 
 
+
     }
+
 
 
 }
