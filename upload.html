@@ -1,152 +1,210 @@
-<!DOCTYPE html>
-<html lang="en">
+// =================================
+// FashionAI Hybrid Clothing Analyzer
+// clothing-ai.js
+// =================================
 
-<head>
 
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+import {
+askGemini
+}
+from "./gemini-ai.js";
 
-<title>FashionAI Upload</title>
 
-<link rel="stylesheet" href="style.css">
+import {
+localAnalyze
+}
+from "./local-fashion-ai.js";
 
-</head>
 
 
-<body>
 
 
-<div class="home-container">
+export async function analyzeClothing(image){
 
 
-<header class="top-bar">
 
-<button onclick="history.back()">
-←
-</button>
+console.log(
+"🤖 Hybrid FashionAI Started"
+);
 
-<h2>
-Upload Clothes
-</h2>
 
-<div>
-👗
-</div>
 
-</header>
 
 
+// =================================
+// 1. Local AI FIRST
+// Always available
+// =================================
 
 
-<section class="card fade-in">
+let localResult =
 
+localAnalyze(image);
 
-<h2 class="card-title">
 
-📷 Add Clothing Item
 
-</h2>
+console.log(
+"LOCAL RESULT:",
+localResult
+);
 
 
-<input 
-type="file"
-id="imageInput"
-accept="image/*">
 
 
 
-<div class="preview-container">
 
-<img 
-id="preview"
-style="display:none">
 
+// =================================
+// 2. Try Gemini Enhancement
+// =================================
 
-</div>
 
+try{
 
 
-<button 
-id="analyzeBtn"
-class="google-btn">
+const prompt = `
 
-🤖 Analyze With FashionAI
+You are FashionAI clothing analyzer.
 
-</button>
+Analyze this clothing image.
 
+Return ONLY valid JSON.
 
-</section>
+Format:
 
+{
+"type":"",
+"category":"",
+"primaryColor":"",
+"secondaryColor":"",
+"material":"",
+"style":"",
+"occasion":"",
+"matchingItems":[]
+}
 
+`;
 
 
 
-<section 
-class="card"
-id="resultCard"
-style="display:none;">
 
 
-<h2 class="card-title">
+const response =
 
-AI Result
+await askGemini(
+prompt,
+image
+);
 
-</h2>
 
 
-<p id="result">
 
-</p>
 
+const cloudResult =
 
-<button 
-id="saveBtn"
-class="guest-btn">
+JSON.parse(response);
 
-💾 Save To Wardrobe
 
-</button>
 
 
-</section>
 
+console.log(
+"GEMINI RESULT:",
+cloudResult
+);
 
 
 
 
 
-</div>
 
 
+// Combine Local + Gemini
 
+return {
 
-<nav class="bottom-nav">
 
+...localResult,
 
-<button>
-🏠
-</button>
 
-<button class="active">
-📷
-</button>
+...cloudResult,
 
-<button>
-✨
-</button>
 
-<button>
-❤️
-</button>
+analyzedBy:
 
+"Hybrid AI + Gemini"
 
-</nav>
 
 
+};
 
-<script type="module" src="./upload.js"></script>
 
 
-</body>
 
-</html>
+
+}
+
+catch(error){
+
+
+
+console.log(
+
+"Gemini unavailable. Using Local FashionAI"
+
+);
+
+
+
+
+
+
+// =================================
+// Offline mode
+// =================================
+
+
+return {
+
+
+...localResult,
+
+
+
+category:
+
+localResult.category ||
+
+"General Wear",
+
+
+
+occasion:
+
+localResult.occasion ||
+
+"Flexible",
+
+
+
+matchingItems:
+
+[],
+
+
+
+analyzedBy:
+
+"Offline Hybrid FashionAI"
+
+
+
+};
+
+
+
+}
+
+
+
+}
