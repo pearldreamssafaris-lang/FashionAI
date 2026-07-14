@@ -1,40 +1,62 @@
-// =================================
-// FashionAI Gemini Connection
-// Vercel Version
-// =================================
+// =====================================
+// FashionAI Vercel Gemini API
+// api/gemini.js
+// =====================================
 
 
-const GEMINI_URL = "/api/gemini";
-
-
-
-export async function askGemini(prompt, image=null){
+export default async function handler(req, res) {
 
 
 try{
 
 
-const body = {
+// Only allow POST
 
-prompt: prompt
+if(req.method !== "POST"){
 
-};
+return res.status(405).json({
 
+error:"Only POST requests allowed"
 
-
-// Add image if available
-
-if(image){
-
-body.image = image;
+});
 
 }
 
 
 
 
-const response = await fetch(
-GEMINI_URL,
+const {
+
+prompt,
+image
+
+} = req.body;
+
+
+
+
+// Check API key
+
+if(!process.env.GEMINI_API_KEY){
+
+
+return res.status(500).json({
+
+error:"Missing GEMINI_API_KEY"
+
+});
+
+
+}
+
+
+
+
+
+const geminiResponse = await fetch(
+
+`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
+
 {
 
 method:"POST",
@@ -45,30 +67,39 @@ headers:{
 
 },
 
-body: JSON.stringify(body)
+
+body:JSON.stringify({
+
+contents:[
+
+{
+
+parts:[
+
+{
+
+text:prompt
+
+}
+
+]
+
+}
+
+]
+
+})
 
 }
 
 );
-
-
-
-
-
-if(!response.ok){
-
-throw new Error(
-"Gemini API Error: " + response.status
-);
-
-}
 
 
 
 
 
 const data =
-await response.json();
+await geminiResponse.json();
 
 
 
@@ -76,9 +107,13 @@ await response.json();
 
 if(data.error){
 
-throw new Error(
-data.error
-);
+
+return res.status(500).json({
+
+error:data.error.message
+
+});
+
 
 }
 
@@ -86,7 +121,16 @@ data.error
 
 
 
-return data.result;
+return res.status(200).json({
+
+result:
+
+data.candidates[0]
+.content
+.parts[0]
+.text
+
+});
 
 
 
@@ -96,12 +140,17 @@ catch(error){
 
 
 console.error(
-"FashionAI Error:",
+"FashionAI API ERROR:",
 error
 );
 
 
-throw error;
+
+return res.status(500).json({
+
+error:error.message
+
+});
 
 
 }
