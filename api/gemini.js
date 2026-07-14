@@ -242,61 +242,42 @@ Give a detailed personalized outfit recommendation.
 
 
 
+const result =
 
-        const result =
-
-        data
-        ?.candidates?.[0]
-        ?.content?.parts?.[0]
-        ?.text;
-
-
-
-
-
-
-        return res.status(200).json({
-
-            result:
-
-            result ||
-
-            fashionFallback(prompt)
-
-
-        });
+data
+?.candidates?.[0]
+?.content?.parts?.[0]
+?.text
+||
+fashionFallback(prompt);
 
 
 
 
+// Sort clothing when image exists
+
+let wardrobe = null;
 
 
-
-    } catch(error) {
-
+if(image && result){
 
 
-        console.error(
-            "SERVER ERROR:",
-            error.message
-        );
-
-
-
-        return res.status(200).json({
-
-            result:
-            fashionFallback()
-
-        });
-
-
-
-    }
-
+wardrobe =
+sortClothing(result);
 
 
 }
+
+
+
+
+return res.status(200).json({
+
+    result,
+
+    wardrobe
+
+});
 
 
 
