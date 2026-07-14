@@ -1,25 +1,27 @@
-// =================================
-// FashionAI Wardrobe Display
+// ======================================
+// FashionAI Wardrobe Page
 // Wardrobe.js
-// =================================
+// ======================================
 
 
 import {
-getWardrobe
+
+loadWardrobe,
+
+searchClothes,
+
+filterByCategory
+
 }
-from "./database.js";
 
+from "./wardrobe-manager.js";
 
-
-import {
-organizeClothing
-}
-from "./wardrobe-engine.js";
 
 
 
 
 const grid =
+
 document.getElementById(
 "wardrobeGrid"
 );
@@ -27,9 +29,11 @@ document.getElementById(
 
 
 const search =
+
 document.getElementById(
 "searchWardrobe"
 );
+
 
 
 
@@ -40,18 +44,16 @@ let clothes=[];
 
 
 // ================================
-// Load wardrobe
+// Load Wardrobe
 // ================================
 
 
-async function loadWardrobe(){
-
-
-try{
+async function startWardrobe(){
 
 
 clothes =
-await getWardrobe();
+
+await loadWardrobe();
 
 
 
@@ -63,23 +65,6 @@ clothes
 
 }
 
-catch(error){
-
-
-console.error(
-"Cannot load wardrobe:",
-error
-);
-
-
-
-}
-
-
-}
-
-
-
 
 
 
@@ -87,14 +72,16 @@ error
 
 
 // ================================
-// Display clothes
+// Display Clothes
 // ================================
 
 
 function displayClothes(items){
 
 
+
 grid.innerHTML="";
+
 
 
 
@@ -111,23 +98,13 @@ Your wardrobe is empty 👗
 
 return;
 
-
 }
 
 
 
 
 
-
 items.forEach(item=>{
-
-
-
-const category =
-
-organizeClothing(item);
-
-
 
 
 
@@ -140,18 +117,21 @@ document.createElement(
 
 
 card.className =
+
 "wardrobe-item";
 
 
 
 
 
-card.innerHTML = `
+card.innerHTML=
 
+`
 
 <div class="clothing-icon">
 
-👕
+👗
+
 </div>
 
 
@@ -166,9 +146,7 @@ ${item.type || "Clothing"}
 
 <p>
 
-🎨 Color:
-
-${item.primaryColor || "Unknown"}
+🎨 ${item.primaryColor || "Unknown"}
 
 </p>
 
@@ -176,9 +154,7 @@ ${item.primaryColor || "Unknown"}
 
 <p>
 
-✨ Style:
-
-${item.style || "Unknown"}
+✨ ${item.style || "Unknown"}
 
 </p>
 
@@ -186,9 +162,7 @@ ${item.style || "Unknown"}
 
 <p>
 
-📂 Category:
-
-${category.category}
+📂 ${item.category || "General Wear"}
 
 </p>
 
@@ -196,7 +170,7 @@ ${category.category}
 
 <span>
 
-🎯 ${category.occasion}
+🎯 ${item.occasion || "Flexible"}
 
 </span>
 
@@ -225,7 +199,7 @@ grid.appendChild(card);
 
 
 // ================================
-// Search wardrobe
+// Search
 // ================================
 
 
@@ -236,31 +210,16 @@ search.addEventListener(
 ()=>{
 
 
-const value =
+const results =
 
-search.value.toLowerCase();
-
-
-
-
-const filtered =
-
-clothes.filter(item =>
-
-
-JSON.stringify(item)
-
-.toLowerCase()
-
-.includes(value)
-
-
+searchClothes(
+search.value
 );
 
 
 
 displayClothes(
-filtered
+results
 );
 
 
@@ -273,19 +232,99 @@ filtered
 
 
 
+
 // ================================
-// Generate Outfit
+// Category Buttons
+// ================================
+
+
+// Example:
+// add buttons with these IDs:
+// officeBtn
+// casualBtn
+// partyBtn
+
+
+const categories = {
+
+
+officeBtn:"Office Wear",
+
+casualBtn:"Casual Wear",
+
+partyBtn:"Party Wear",
+
+travelBtn:"Travel Wear",
+
+eventBtn:"Event Wear"
+
+
+};
+
+
+
+
+Object.keys(categories)
+.forEach(button=>{
+
+
+const element =
+
+document.getElementById(
+button
+);
+
+
+
+if(element){
+
+
+element.onclick=()=>{
+
+
+displayClothes(
+
+filterByCategory(
+
+categories[button]
+
+)
+
+);
+
+
+};
+
+
+}
+
+
+
+});
+
+
+
+
+
+
+
+
+// ================================
+// Outfit Generator
 // ================================
 
 
 document
+
 .getElementById(
 "generateBtn"
 )
+
 .onclick=()=>{
 
 
-window.location.href =
+window.location.href=
+
 "outfits.html";
 
 
@@ -298,4 +337,4 @@ window.location.href =
 
 
 
-loadWardrobe();
+startWardrobe();
