@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>FashionAI Upload</title>
+
+<link rel="stylesheet" href="style.css">
+
+</head>
+
+
+<body>
+
+
+<div class="home-container">
+
+
+<header class="top-bar">
+
+<button onclick="history.back()">
+←
+</button>
+
+<h2>
+Upload Clothes
+</h2>
+
+<div>
+👗
+</div>
+
+</header>
+
+
+
+
+<section class="card fade-in">
+
+
+<h2 class="card-title">
+
+📷 Add Clothing Item
+
+</h2>
+
+
+<input 
+type="file"
+id="imageInput"
+accept="image/*">
+
+
+
+<div class="preview-container">
+
+<img 
+id="preview"
+style="display:none">
+
+
+</div>
+
+
+
+<button 
+id="analyzeBtn"
+class="google-btn">
+
+🤖 Analyze With FashionAI
+
+</button>
+
+
+</section>
+
+
+
+
+
+<section 
+class="card"
+id="resultCard"
+style="display:none;">
+
+
+<h2 class="card-title">
+
+AI Result
+
+</h2>
+
+
+<p id="result">
+
+</p>
+
+
+<button 
+id="saveBtn"
+class="guest-btn">
+
+💾 Save To Wardrobe
+
+</button>
+
+
+</section>
+
+
+
+
+
+
+</div>
+
+
+
+
+<nav class="bottom-nav">
+
+
+<button>
+🏠
+</button>
+
+<button class="active">
+📷
+</button>
+
+<button>
+✨
+</button>
+
+<button>
+❤️
+</button>
+
+
+</nav>
+
+
+
+<script type="module" src="./upload.js"></script>
+
+
+</body>
+
+</html>
